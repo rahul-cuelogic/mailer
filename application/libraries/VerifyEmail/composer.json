@@ -7,7 +7,7 @@
     },
     
     "require": {
-        "hbattat/verifyemail": "1.0.0"
+        "hbattat/verifyemail": "dev-master"
     },
 
 
