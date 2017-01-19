@@ -36,5 +36,17 @@ class ValidateEmail extends hbattat\VerifyEmail{
 
         return ($response);
     }
+    
+    public function validateCombinations($combinations, $debug = false)
+    {
+        $response= array();
+        
+        $response['result'] = $this->verifier->verifyCombinations($combinations);
+        
+        if($debug)
+            $response['debug'] = ($this->verifier->get_debug());
+
+        return ($response);
+    }
 
 }

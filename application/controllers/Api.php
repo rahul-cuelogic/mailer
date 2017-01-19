@@ -17,6 +17,16 @@ class Api extends REST_Controller
 		$fromEmail = $this->get('fromEmail');
 		$port = !empty($this->get('port')) ? $this->get('port') : 25;
 		$debug= $this->get('debug');
+		$combinations = array();
+		$combinationAllowedCount= 10;
+		//$combinations = $this->get('combinations');
+		if(is_array($this->get('combinations')))
+		{
+			$combinations = $this->get('combinations');
+		}
+
+		//print_r(count($combinations));
+		//exit();
 
 		$requiredFileds= '';
 		if(empty($email)){
@@ -36,13 +46,30 @@ class Api extends REST_Controller
 
 		}
 
-		$params = array('email' => $this->get('email'), 'fromEmail' => $fromEmail, 'port' => 25);	
-		
+		if(count($combinations) > 10){
+			$message = array('error' => 'Email combinations exceeds the allowed size');
+			$this->response($message);
+			return ;			
+		}
+
+
+
+		$params = array('email' => $this->get('email'), 'fromEmail' => $fromEmail, 'port' => 25, 'combinations' => $combinations);
+
+
 
 		$this->load->library('ValidateEmail', $params);
 
-		$data = $this->validateemail->checkEmail($debug);
-    	$this->response($data);
+		if(count($combinations) <= 10){
+			$data = $this->validateemail->validateCombinations($combinations, $debug);
+		
+		}else{
+			
+			$data = $this->validateemail->checkEmail($debug);
+		}
+
+		$this->response($data);
+
   	}
 
 	public function index_post()

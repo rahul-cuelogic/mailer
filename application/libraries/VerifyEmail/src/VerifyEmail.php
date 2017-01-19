@@ -170,6 +170,119 @@
       return $is_valid;
     }
 
+    public function verifyCombinations($combinations) {
+          $this->debug[] = 'Verify combinations function was called.';
+
+          $is_valid = false;
+          $combinationResults = array();
+
+          //check if this is a yahoo email
+          $domain = $this->get_domain($this->email);
+          if(strtolower($domain) == 'yahoo.com') {
+            $is_valid = $this->validate_yahoo();
+          }
+          //otherwise check the normal way
+          else {
+            //find mx
+            $this->debug[] = 'Finding MX record...';
+            $this->find_mx();
+
+            if(!$this->mx) {
+              $this->debug[] = 'No MX record was found.';
+              $this->add_error('100', 'No suitable MX records found.');
+              return $is_valid;
+            }
+            else {
+              $this->debug[] = 'Found MX: '.$this->mx;
+            }
+
+
+            $this->debug[] = 'Connecting to the server...';
+            $this->connect_mx();
+
+            if(!$this->connect) {
+              $this->debug[] = 'Connection to server failed.';
+              $this->add_error('110', 'Could not connect to the server.');
+              return $is_valid;
+            }
+            else {
+              $this->debug[] = 'Connection to server was successful.';
+            }
+
+
+            $this->debug[] = 'Starting veriffication...';
+            if(preg_match("/^220/i", $out = fgets($this->connect))){
+              $this->debug[] = 'Got a 220 response. Sending HELO...';
+              fputs ($this->connect , "HELO ".$this->get_domain($this->verifier_email)."\r\n");
+              $out = fgets ($this->connect);
+              $this->debug_raw['helo'] = $out;
+              $this->debug[] = 'Response: '.$out;
+
+              $this->debug[] = 'Sending MAIL FROM...';
+              fputs ($this->connect , "MAIL FROM: <".$this->verifier_email.">\r\n");
+              $from = fgets ($this->connect);
+              $this->debug_raw['mail_from'] = $from;
+              $this->debug[] = 'Response: '.$from;
+
+              $this->debug[] = 'Sending RCPT TO...';
+              fputs ($this->connect , "RCPT TO: <".$this->email.">\r\n");
+              $to = fgets ($this->connect);
+              $this->debug_raw['rcpt_to'] = $to;
+              $this->debug[] = 'Response: '.$to;
+
+               if(is_array($combinations) && count($combinations)){
+
+                foreach ($combinations as $key => $value) {
+                  # code...
+                  $this->debug[] = 'Sending RCPT TO:'.$value;
+                  fputs ($this->connect , "RCPT TO: <".$value.">\r\n");
+                  $combination = fgets ($this->connect);
+                  $this->debug_raw['rcpt_to'] = $combination;
+                  $this->debug[] = 'Response: '.$combination;
+
+                  $this->debug[] = 'Looking for 250 response...';
+                  if(!preg_match("/^250/i", $combination)){
+                    
+                    $this->debug[] = 'Not found! Email is invalid.';
+                    $combinationResults[$value]= false;
+                  
+                  }else{
+                  
+                    $this->debug[] = 'Found! Email is valid.';
+                    $combinationResults[$value]= true;
+
+                  }
+                }
+              }
+
+
+
+
+              $this->debug[] = 'Sending QUIT...';
+              $quit = fputs ($this->connect , "QUIT");
+              $this->debug_raw['quit'] = $quit;
+              fclose($this->connect);
+
+              $this->debug[] = 'Looking for 250 response...';
+              if(!preg_match("/^250/i", $from) || !preg_match("/^250/i", $to)){
+                $this->debug[] = 'Not found! Email is invalid.';
+                $combinationResults[$this->email] = false;
+              
+              }else{
+              
+                $this->debug[] = 'Found! Email is valid.';
+                $combinationResults[$this->email] = true;
+              
+              }
+            }
+            else {
+              $this->debug[] = 'Encountered an unknown response code.';
+            }
+          }
+
+          return $combinationResults;
+        }
+
     private function get_domain($email) {
       $email_arr = explode("@", $email);
       $domain = array_slice($email_arr, -1);
