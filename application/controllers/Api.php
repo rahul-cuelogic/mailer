@@ -46,7 +46,7 @@ class Api extends REST_Controller
 
 		}
 
-		if(count($combinations) > 10){
+		if(count($combinations) > 5){
 			$message = array('error' => 'Email combinations exceeds the allowed size');
 			$this->response($message);
 			return ;			
@@ -60,7 +60,7 @@ class Api extends REST_Controller
 
 		$this->load->library('ValidateEmail', $params);
 
-		if(count($combinations) <= 10){
+		if(count($combinations) <= 5 && count($combinations) > 0){
 			$data = $this->validateemail->validateCombinations($combinations, $debug);
 		
 		}else{
