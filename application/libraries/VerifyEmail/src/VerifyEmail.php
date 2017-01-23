@@ -147,6 +147,17 @@
           $this->debug_raw['rcpt_to'] = $to;
           $this->debug[] = 'Response: '.$to;
 
+          $this->debug[] = 'Checking for Catch All...';
+          $usernameFromEmail = $this->getUserNameFromEmail($this->email);
+          $rand = substr(md5(microtime()),rand(0,26),5);
+          $catchEmail= $usernameFromEmail.$rand.'@'.$domain;
+          fputs ($this->connect , "RCPT TO: <".$catchEmail.">\r\n");
+          $catch = fgets ($this->connect);
+          $this->debug_raw['rcpt_to'] = $catch;
+          $this->debug[] = 'Response: '.$catch;
+
+
+
           $this->debug[] = 'Sending QUIT...';
           $quit = fputs ($this->connect , "QUIT");
           $this->debug_raw['quit'] = $quit;
@@ -160,6 +171,14 @@
           else{
             $this->debug[] = 'Found! Email is valid.';
             $is_valid = true;
+            if(!preg_match("/^250/i", $catch)){
+              $catchAll = false;
+            }
+            else{
+              $catchAll = true;
+
+            }
+
           }
         }
         else {
@@ -167,7 +186,12 @@
         }
       }
 
-      return $is_valid;
+      if($is_valid){
+        return array('isvalid'=>$is_valid, 'catchall'=> $catchAll);
+      }else{
+        return array('isvalid'=>$is_valid);
+      }
+
     }
 
     public function verifyCombinations($combinations) {
@@ -230,38 +254,13 @@
               $this->debug_raw['rcpt_to'] = $to;
               $this->debug[] = 'Response: '.$to;
 
-               if(is_array($combinations) && count($combinations)){
-
-                foreach ($combinations as $key => $value) {
-                  # code...
-                  $this->debug[] = 'Sending RCPT TO:'.$value;
-                  fputs ($this->connect , "RCPT TO: <".$value.">\r\n");
-                  $combination = fgets ($this->connect);
-                  $this->debug_raw['rcpt_to'] = $combination;
-                  $this->debug[] = 'Response: '.$combination;
-
-                  $this->debug[] = 'Looking for 250 response...';
-                  if(!preg_match("/^250/i", $combination)){
-                    
-                    $this->debug[] = 'Not found! Email is invalid.';
-                    $combinationResults[$value]= false;
-                  
-                  }else{
-                  
-                    $this->debug[] = 'Found! Email is valid.';
-                    $combinationResults[$value]= true;
-
+              if($this->mx == 'ASPMX.L.GOOGLE.com') {
+                  if(!preg_match("/^250/i", $to)){
+                    fgets ($this->connect);
+                    fgets ($this->connect);
+                    fgets ($this->connect);
                   }
-                }
               }
-
-
-
-
-              $this->debug[] = 'Sending QUIT...';
-              $quit = fputs ($this->connect , "QUIT");
-              $this->debug_raw['quit'] = $quit;
-              fclose($this->connect);
 
               $this->debug[] = 'Looking for 250 response...';
               if(!preg_match("/^250/i", $from) || !preg_match("/^250/i", $to)){
@@ -274,20 +273,67 @@
                 $combinationResults[$this->email] = true;
               
               }
+
+
+
+               if(is_array($combinations) && count($combinations)){
+                
+                $combinationDebug=array();
+                foreach ($combinations as $key => $value) {
+                  # code...
+                  
+                    $this->debug[] = 'Sending RCPT TO:'.$value;
+                    fputs ($this->connect , "RCPT TO: <".$value.">\r\n");
+                    $combination = fgets ($this->connect);
+
+                    if($this->mx == 'ASPMX.L.GOOGLE.com') {
+                        if(!preg_match("/^250/i", $combination)){
+                          fgets ($this->connect);
+                          fgets ($this->connect);
+                          fgets ($this->connect);
+                        }
+                    }
+
+                    $this->debug_raw['rcpt_to'] = $combination;
+                    $this->debug[$value] = 'Response: '.$combination;
+                    $this->debug[$value] = 'Looking for 250 response...';
+                  
+                    if(!preg_match("/^250/i", $combination)){
+                    
+                    $this->debug[$value] = 'Not found! Email is invalid.';
+                    $combinationResults[$value]= false;
+                  
+                    }else{
+                        $this->debug[$value] = 'Found! Email is valid.';
+                        $combinationDebug[][$value] = 'Found! Email is valid.';
+                        $combinationResults[$value]= true;
+                    }
+
+                }
+            }
+
+              $this->debug[] = 'Sending QUIT...';
+              $quit = fputs ($this->connect , "QUIT");
+              $this->debug_raw['quit'] = $quit;
+              fclose($this->connect);
             }
             else {
               $this->debug[] = 'Encountered an unknown response code.';
             }
-          }
-
-          return $combinationResults;
         }
+            return $combinationResults;
+    }
 
     private function get_domain($email) {
       $email_arr = explode("@", $email);
       $domain = array_slice($email_arr, -1);
       return $domain[0];
     }
+    
+    private function getUserNameFromEmail($email) {
+      return substr($email, 0, strrpos($email, '@'));
+    }
+
     private function find_mx() {
       $domain = $this->get_domain($this->email);
       $mx_ip = false;
