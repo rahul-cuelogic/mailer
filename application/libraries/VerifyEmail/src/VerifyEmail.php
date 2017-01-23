@@ -92,6 +92,7 @@
       $this->debug[] = 'Verify function was called.';
 
       $is_valid = false;
+      $catchAll = false;
 
       //check if this is a yahoo email
       $domain = $this->get_domain($this->email);
