@@ -29,7 +29,7 @@ class ValidateEmail extends hbattat\VerifyEmail{
     public function checkEmail($debug = false)
     {
         $response= array();
-        $response['isvalid'] = $this->verifier->verify();
+        $response['response'] = $this->verifier->verify();
         
         if($debug)
             $response['debug'] = ($this->verifier->get_debug());
