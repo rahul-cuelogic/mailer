@@ -16,7 +16,7 @@
    * @author  Husam (Sam) Battat <hbattat@msn.com>
    * This is a test message for packagist
    */
-
+error_reporting(E_ALL & ~E_NOTICE);
   class VerifyEmail {
     public $email;
     public $verifier_email;
@@ -129,13 +129,13 @@
 
 
         $this->debug[] = 'Starting veriffication...';
+        //sleep(5);
         if(preg_match("/^220/i", $out = fgets($this->connect))){
           $this->debug[] = 'Got a 220 response. Sending HELO...';
           fputs ($this->connect , "HELO ".$this->get_domain($this->verifier_email)."\r\n");
           $out = fgets ($this->connect);
           $this->debug_raw['helo'] = $out;
           $this->debug[] = 'Response: '.$out;
-
           $this->debug[] = 'Sending MAIL FROM...';
           fputs ($this->connect , "MAIL FROM: <".$this->verifier_email.">\r\n");
           $from = fgets ($this->connect);
@@ -355,9 +355,40 @@
       }
 
       if(!empty($mxhosts) ) {
-        $mx_ip = $mxhosts[array_search(min($mxweight), $mxweight)];
-      }
-      else {
+        $combine =array();
+        //$mx_ip = $mxhosts[array_search(min($mxweight), $mxweight)];
+        foreach ($mxweight as $key => $value) {
+            
+            if(array_key_exists($value, $combine)){
+                $combine[$value+10] = $mxhosts[$key];
+            }
+            else
+                $combine[$value] = $mxhosts[$key];
+        }
+
+
+        //$combine = array_combine($mxweight,$mxhosts);
+        ksort($combine);
+        //print_r($combine);
+        //$mx_ip = $combine[0];
+        if(is_array($combine) && count($combine) > 0){
+
+            $this->debug['mxhosts'] = $combine;
+
+            foreach ($combine as $key => $value) {
+                $this->debug[] = 'checking mx connection for:'.$value;
+                $this->connect = @fsockopen($value, $this->port);
+                //check is connected
+                if($this->connect) {
+                    $this->debug[] = 'mx connection available for:'.$value;
+                    $mx_ip = $value;
+                    fclose($this->connect);
+                    break;   
+                }
+            }
+        }
+        //$this->mx = $mx_ip;
+    } else {
         if( filter_var($domain, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ) {
           $record_a = dns_get_record($domain, DNS_A);
         }
@@ -371,7 +402,7 @@
 
       }
 
-      $this->mx = $mx_ip;
+        $this->mx = $mx_ip;
     }
 
 
