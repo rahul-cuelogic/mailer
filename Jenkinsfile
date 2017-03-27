@@ -8,19 +8,20 @@ pipeline {
   stages {
     stage('build') {
       steps {
-        echo 'build step'
+        sh 'start build'
       }
     }
-    stage('Sanity check') {
-             steps {
-                 input "Does the staging environment for cuelab look ok?"
-             }
-         }
+   
     stage('deploy') {
       steps {
         sh 'pwd'
         sh './build.sh'
       }
     }
+     stage('Sanity check') {
+             steps {
+                 input "Does the staging environment for cuelab look ok?"
+             }
+         }
   }
 }
