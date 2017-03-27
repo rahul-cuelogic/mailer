@@ -1,4 +1,6 @@
 #!/bin/bash
 
 echo "create a file"
-sudo touch cuelab
+touch cuelab
+
+tar -cvzf cuelab.tar.gz $PWD
