@@ -11,6 +11,11 @@ pipeline {
         echo 'build step'
       }
     }
+    stage('Sanity check') {
+             steps {
+                 input "Does the staging environment for cuelab look ok?"
+             }
+         }
     stage('deploy') {
       steps {
         sh 'pwd'
