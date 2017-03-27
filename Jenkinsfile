@@ -8,8 +8,7 @@ pipeline {
     }
     stage('deploy') {
       steps {
-        sh '''echo "create a file"
-sudo touch cuelab'''
+        sh 'sudo echo $PWD'
       }
     }
   }
