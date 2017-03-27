@@ -1,3 +1,5 @@
 #!/bin/bash
 
-tar -cvzf cuelab.tar.gz $JENKINS_HOME/logs
+mkdir $JENKINS_HOME/deployment
+
+tar -cvzf $JENKINS_HOME/deployment/cuelab.tar.gz-$(date +\%d-\%m-\%Y-%H:%M:%S) .
