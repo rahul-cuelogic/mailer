@@ -1,25 +1,16 @@
 pipeline {
-  agent {
-    docker {
-      image 'ubuntu'
-    }
-    
-  }
+  agent dockerfile
   stages {
     stage('build') {
       steps {
-        sh '''#!/bin/bash
-
-echo "Test project ${env.PROJECT}"
+        sh '''echo "Test project ${env.PROJECT}"
 touch cuelab.txt'''
       }
     }
     stage('deploy') {
       steps {
         dir(path: '/var/jenkins_home') {
-          sh '''#!/bin/bash
-
-touch buildsuccess
+          sh '''touch buildsuccess
 touch buildsuccess2'''
         }
         
@@ -27,9 +18,7 @@ touch buildsuccess2'''
     }
     stage('cleanup') {
       steps {
-        sh '''#!/bin/bash
-
-ls -l /var/jenkins_home | grep -i buildsuccess
+        sh '''ls -l /var/jenkins_home | grep -i buildsuccess
 
 if [ $? -eq 0 ]; then
 
