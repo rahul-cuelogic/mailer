@@ -8,7 +8,8 @@ pipeline {
     }
     stage('deploy') {
       steps {
-        sh './build.sh'
+        sh '''echo "create a file"
+sudo touch cuelab'''
       }
     }
   }
