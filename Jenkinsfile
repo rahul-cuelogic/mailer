@@ -8,7 +8,7 @@ pipeline {
   stages {
     stage('build') {
       steps {
-        echo 'start building'
+        echo 'start building...'
       }
     }
     stage('deploy') {
@@ -25,7 +25,7 @@ pipeline {
         )
       }
     }
-    stage('Sanity check') {
+    stage('Sanity check...') {
       steps {
         input 'Does the staging environment for cuelab look ok?'
       }
