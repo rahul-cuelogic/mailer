@@ -15,7 +15,7 @@ pipeline {
       steps {
         parallel(
           "deploy": {
-            sh './build.sh'
+            echo 'Deploying'
             
           },
           "test": {
@@ -28,6 +28,11 @@ pipeline {
     stage('Sanity check...') {
       steps {
         input 'Does the staging environment for cuelab look ok?'
+      }
+    }
+    stage('Deploy - production') {
+      steps {
+        echo "Deploying.."
       }
     }
   }
