@@ -40,7 +40,7 @@ pipeline {
     }
     stage('Deploy - production') {
       steps {
-        echo "Deploying.."
+        sh './deploy.sh'
       }
     }
   }
