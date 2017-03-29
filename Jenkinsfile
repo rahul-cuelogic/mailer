@@ -6,20 +6,20 @@ pipeline {
     
   }
   stages {
-    stage('build..') {
+    stage('build') {
       steps {
         echo 'start building...'
       }
     }
-    stage('deploy..') {
+    stage('Test') {
       steps {
         parallel(
-          "deploy": {
-            echo 'Deploying'
+          "test1": {
+            echo 'test parallel 1'
             
           },
-          "test": {
-            sh 'echo "test parallel"'
+          "test2": {
+            sh 'echo "test parallel 2"'
             
           }
         )
