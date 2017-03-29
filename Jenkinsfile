@@ -8,19 +8,27 @@ pipeline {
   stages {
     stage('build') {
       steps {
-        echo "start building"
+        echo 'start building'
       }
     }
-   
     stage('deploy') {
       steps {
-        sh './build.sh'
+        parallel(
+          "deploy": {
+            sh './build.sh'
+            
+          },
+          "test": {
+            sh 'echo "test parallel"'
+            
+          }
+        )
       }
     }
-     stage('Sanity check') {
-             steps {
-                 input "Does the staging environment for cuelab look ok?"
-             }
-         }
+    stage('Sanity check') {
+      steps {
+        input 'Does the staging environment for cuelab look ok?'
+      }
+    }
   }
 }
