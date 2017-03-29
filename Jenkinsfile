@@ -40,7 +40,7 @@ pipeline {
     }
     stage('Deploy - production') {
       steps {
-        sh './deploy.sh'
+        sh './build.sh'
       }
     }
   }
