@@ -26,12 +26,13 @@ pipeline {
       }
     }
     stage('Example') {
-      environment { 
-        AN_ACCESS_KEY = credentials('my-prefined-secret-text') ③
-  }
-      steps {
-        sh 'printenv'
-  }
+      environment {
+        AN_ACCESS_KEY = credentials('pem-id')
+      }
+      steps {
+      sh 'printenv'
+      }
+    }    
     stage('Sanity check...') {
       steps {
         input 'Does the staging environment for cuelab look ok?'
