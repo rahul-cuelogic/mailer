@@ -7,10 +7,9 @@ pipeline {
   }
   stages {
     stage('Start') {
-    	steps {
-    		// send build start notification
-    		slackSend (color: '#FFFF00', message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-    	}
+      steps {
+        slackSend(color: '#FFFF00', message: '"STARTED: Job \'${env.JOB_NAME} [${env.BUILD_NUMBER}]\' (${env.BUILD_URL})"')
+      }
     }
     stage('build') {
       steps {
@@ -31,10 +30,20 @@ pipeline {
         )
       }
     }
-    
     stage('Sanity check...') {
       steps {
-        input 'Does the staging environment for cuelab look ok?'
+        parallel(
+          "Sanity check...": {
+            input 'Does the staging environment for cuelab look ok?'
+            
+          },
+          "commit id": {
+            sh '''sudo git rev-parse --short HEAD > current.txt
+sudo git rev-parse --short HEAD~1 > prev.txt
+'''
+            
+          }
+        )
       }
     }
     stage('Deploy - production') {
@@ -43,14 +52,16 @@ pipeline {
       }
     }
   }
-post {
+  post {
     success {
-      slackSend (color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+      slackSend(color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+      
     }
     
     failure {
-      slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+      slackSend(color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+      
     }
-}        
-
+    
+  }
 }
